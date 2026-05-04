@@ -165,7 +165,7 @@ app.post('/pix/pay', async (req, res) => {
 
       console.log('[pix/pay] body to Inter:', JSON.stringify(pixBody));
 
-      let result = await interRequest('POST', '/banking/v2/pix/pagamento', token, pixBody);
+          let result = await interRequest('POST', '/banking/v2/pix', token, pixBody);
           console.log('[pix/pay] /banking/v3/pix/pagamento status:', result.status, 'body:', result.body.substring(0, 300));
 
       if (result.status === 404) {
