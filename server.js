@@ -116,8 +116,8 @@ app.get('/diagnostics', async (req, res) => {
                 const tokenPix = await getToken('pagamento-pix.write');
                 const testBody = { valor: 0.01, destinatario: { tipo: 'CHAVE', chave: process.env.INTER_PIX_KEY || '09.483.480/0001-20' }, descricao: 'diag' };
                 const pixPaths = [
-                        '/banking/v3/pix/pagamento',
-                        '/banking/v3/pix',
+                                '/banking/v2/pix/pagamento',
+                                '/banking/v2/pix',
                         '/pix/v2/pagamento',
                         '/pix/v1/pagamento',
                         '/pagamento-pix/v3/pix/pagamento',
