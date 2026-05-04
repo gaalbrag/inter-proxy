@@ -138,6 +138,9 @@ app.post('/pix/pay', async (req, res) => {
           const body = req.body || {};
           const valor = body.valor;
           const chave = body.chave || body.chavePix;
+                const tipoConta = body.tipoConta || '';
+                // Sanitize chave: remove formatting for CNPJ and CPF
+                const chaveSanitized = (tipoConta === 'CNPJ' || tipoConta === 'CPF') ? (chave || '').replace(/[.\-\/\s]/g, '') : chave;
           const descricao = body.descricao || 'Pagamento PIX';
           const nomeDestinatario = body.nomeDestinatario;
           const valorReais = body.valorReais;
@@ -145,8 +148,7 @@ app.post('/pix/pay', async (req, res) => {
 
       const valorNum = parseFloat(valorReais) || parseFloat((valor / 100).toFixed(2)) || 0;
 
-      if (!chave) return res.status(400).json({ error: 'chave PIX e obrigatoria' });
-          if (valorNum <= 0) return res.status(400).json({ error: 'valor deve ser maior que zero' });
+                  if (!chaveSanitized) return res.status(400).json({ error: 'chave PIX e obrigatoria' });
 
       console.log('[pix/pay] getting token...');
           const token = await getToken('pagamento-pix.write');
@@ -156,7 +158,7 @@ app.post('/pix/pay', async (req, res) => {
               valor: parseFloat(valorNum.toFixed(2)),
               destinatario: {
                         tipo: 'CHAVE',
-                        chave: chave
+                                        chave: chaveSanitized
               },
               descricao: descricao
       };
