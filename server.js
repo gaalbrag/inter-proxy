@@ -165,11 +165,11 @@ app.post('/pix/pay', async (req, res) => {
 
       console.log('[pix/pay] body to Inter:', JSON.stringify(pixBody));
 
-      let result = await interRequest('POST', '/banking/v3/pix/pagamento', token, pixBody);
+      let result = await interRequest('POST', '/banking/v2/pix/pagamento', token, pixBody);
           console.log('[pix/pay] /banking/v3/pix/pagamento status:', result.status, 'body:', result.body.substring(0, 300));
 
       if (result.status === 404) {
-              result = await interRequest('POST', '/banking/v3/pix', token, pixBody);
+              result = await interRequest('POST', '/banking/v2/pix', token, pixBody);
               console.log('[pix/pay] /banking/v3/pix status:', result.status, 'body:', result.body.substring(0, 300));
       }
 
@@ -192,7 +192,7 @@ app.get('/extrato', async (req, res) => {
                   pagina: req.query.pagina || 0,
                   tamanhoPagina: req.query.tamanhoPagina || 50
           });
-          const result = await interRequest('GET', '/banking/v3/extrato?' + params, token, null);
+          const result = await interRequest('GET', '/banking/v2/extrato?' + params, token, null);
           let parsed;
           try { parsed = JSON.parse(result.body); } catch (e) { parsed = { raw: result.body }; }
           return res.status(result.status).json(parsed);
@@ -213,7 +213,7 @@ app.post('/inter', async (req, res) => {
                             pagina: params.pagina || 0,
                             tamanhoPagina: params.tamanhoPagina || 50
                   });
-                  const result = await interRequest('GET', '/banking/v3/extrato?' + qParams, token, null);
+                  const result = await interRequest('GET', '/banking/v2/extrato?' + qParams, token, null);
                   let parsed;
                   try { parsed = JSON.parse(result.body); } catch (e) { parsed = { raw: result.body }; }
                   return res.status(result.status).json(parsed);
