@@ -246,7 +246,7 @@ app.get('/diagnostics/transferencia', async (req, res) => {
                                                             valor: 0.01,
                                                             destinatario: {
                                                                                         tipo: 'DADOS_BANCARIOS',
-                                                                                        banco: '000',
+                                                                                        instituicaoFinanceira: '000',
                                                                                         agencia: '0000',
                                                                                         conta: '0000000',
                                                                                         tipoConta: 'CORRENTE',
@@ -256,7 +256,7 @@ app.get('/diagnostics/transferencia', async (req, res) => {
                                                             descricao: 'diagnostics - nao processar'
                                     };
                                     const r = await interRequest('POST', '/banking/v2/pix', token, testBody);
-                                    results['POST /banking/v2/pix'] = { status: r.status, body: r.body.substring(0, 400) };
+                                    results['POST /banking/v2/pix'] = { status: r.status, body: r.body.substring(0, 1200) };
                 } catch (e) { results.transferencia_error = e.message; }
                 res.json(results);
 });
@@ -295,7 +295,7 @@ app.post('/transferencia/pay', async (req, res) => {
                                     valor: parseFloat(valorNum.toFixed(2)),
                                     destinatario: {
                                                             tipo: 'DADOS_BANCARIOS',
-                                                            banco,
+                                                            instituicaoFinanceira: banco,
                                                             agencia,
                                                             conta,
                                                             tipoConta,
