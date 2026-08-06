@@ -235,6 +235,32 @@ app.post('/boleto/pay', async (req, res) => {
             }
 });
 
+// GET /diagnostics/transferencia - probes the Pix "dados bancarios" shape with an
+// intentionally fake/nonexistent bank account, so Inter should reject it with a
+// data/account validation error instead of transferring real money.
+app.get('/diagnostics/transferencia', async (req, res) => {
+                const results = {};
+                try {
+                                    const token = await getToken('pagamento-pix.write');
+                                    const testBody = {
+                                                            valor: 0.01,
+                                                            destinatario: {
+                                                                                        tipo: 'DADOS_BANCARIOS',
+                                                                                        banco: '000',
+                                                                                        agencia: '0000',
+                                                                                        conta: '0000000',
+                                                                                        tipoConta: 'CORRENTE',
+                                                                                        cpfCnpj: '00000000000',
+                                                                                        nome: 'Teste Diagnostico'
+                                                                        },
+                                                            descricao: 'diagnostics - nao processar'
+                                    };
+                                    const r = await interRequest('POST', '/banking/v2/pix', token, testBody);
+                                    results['POST /banking/v2/pix'] = { status: r.status, body: r.body.substring(0, 400) };
+                } catch (e) { results.transferencia_error = e.message; }
+                res.json(results);
+});
+
 // POST /transferencia/pay - used by Supabase edge function inter-api (action "transferencia-pay")
 // O Inter nao expoe uma API publica de TED/DOC tradicional; a forma equivalente de
 // transferir para uma conta de terceiros (banco/agencia/conta) e via Pix informando
