@@ -147,6 +147,7 @@ app.get('/diagnostics/boleto', async (req, res) => {
                                                 dataVencimento: hoje,
                                                 dataPagamento: hoje,
                                                 valorPagamento: 0.01,
+                                        valorPagar: 0.01,
                                                 descricaoPagamento: 'diagnostics - nao processar',
                                                 descricao: 'diagnostics - nao processar'
                             };
@@ -204,6 +205,7 @@ app.post('/boleto/pay', async (req, res) => {
                                     codBarraLinhaDigitavel: linhaDigitavel,
                                     dataVencimento,
                                     valorPagamento: parseFloat(valorNum.toFixed(2)),
+                            valorPagar: parseFloat(valorNum.toFixed(2)),
                                     descricaoPagamento: descricao,
                                     descricao
                 };
