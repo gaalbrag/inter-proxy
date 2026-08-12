@@ -360,3 +360,52 @@ app.post('/inter', async (req, res) => {
 });
 
 app.listen(PORT, () => console.log('inter-proxy listening on port ' + PORT));
+
+// -------- GET /pix/status/:id and /transferencia/status/:id --------
+// Consulta o status de um pagamento Pix (dados bancarios) feito via /transferencia/pay.
+// O Inter nao documenta endpoint dedicado para este tipo; tentamos os paths mais
+// provaveis e, se nenhum responder, retornamos SEM_CONSULTA_DISPONIVEL (o outcome
+// real ja foi decidido de forma sincrona na resposta do pagamento).
+const PIX_STATUS_PATHS = ['/banking/v2/pix/', '/banking/v2/pix/pagamento/'];
+async function handlePixStatus(req, res) {
+            try {
+                        const token = await getToken('pagamento-pix.write');
+                        let lastResult = null;
+                        for (const base of PIX_STATUS_PATHS) {
+                                    lastResult = await interRequest('GET', base + encodeURIComponent(req.params.id), token, null);
+                                    if (lastResult.status !== 404 && lastResult.status !== 405) break;
+                        }
+                        if (!lastResult || lastResult.status === 404 || lastResult.status === 405) {
+                                    return res.status(200).json({ success: true, status: 'SEM_CONSULTA_DISPONIVEL', note: 'Inter nao expoe consulta para este tipo de Pix/transferencia; outcome ja decidido no pagamento.' });
+                        }
+                        let parsed;
+                        try { parsed = JSON.parse(lastResult.body); } catch (e) { parsed = { raw: lastResult.body }; }
+                        return res.status(lastResult.status).json(parsed);
+            } catch (err) {
+                        return res.status(500).json({ error: err.message });
+            }
+}
+app.get('/pix/status/:id', handlePixStatus);
+app.get('/transferencia/status/:id', handlePixStatus);
+
+// -------- GET /boleto/status/:id --------
+// Consulta o status de um pagamento de boleto pelo codigoSolicitacao retornado em /boleto/pay.
+const BOLETO_STATUS_PATHS = ['/banking/v2/pagamento/', '/banking/v2/pagamento/pagamento/'];
+app.get('/boleto/status/:id', async (req, res) => {
+            try {
+                        const token = await getToken('pagamento-boleto.write');
+                        let lastResult = null;
+                        for (const base of BOLETO_STATUS_PATHS) {
+                                    lastResult = await interRequest('GET', base + encodeURIComponent(req.params.id), token, null);
+                                    if (lastResult.status !== 404 && lastResult.status !== 405) break;
+                        }
+                        if (!lastResult || lastResult.status === 404 || lastResult.status === 405) {
+                                    return res.status(200).json({ success: true, status: 'SEM_CONSULTA_DISPONIVEL', note: 'Nenhum endpoint de consulta de boleto respondeu; outcome ja decidido no pagamento.' });
+                        }
+                        let parsed;
+                        try { parsed = JSON.parse(lastResult.body); } catch (e) { parsed = { raw: lastResult.body }; }
+                        return res.status(lastResult.status).json(parsed);
+            } catch (err) {
+                        return res.status(500).json({ error: err.message });
+            }
+});
