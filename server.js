@@ -352,6 +352,25 @@ app.post('/pix/pay', async (req, res) => {
             }
 });
 
+// GET /saldo - consulta o saldo da conta corrente no Inter
+app.get('/saldo', async (req, res) => {
+              try {
+                              const token = await getToken('extrato.read');
+                              const params = querystring.stringify({
+                                                dataSaldo: req.query.dataSaldo || new Date().toISOString().split('T')[0]
+                              });
+                              let result = await interRequest('GET', '/banking/v2/saldo?' + params, token, null);
+                              if (result.status === 404 || result.status === 405) {
+                                                result = await interRequest('GET', '/banking/v3/saldo?' + params, token, null);
+                              }
+                              let parsed;
+                              try { parsed = JSON.parse(result.body); } catch (e) { parsed = { raw: result.body }; }
+                              return res.status(result.status).json(parsed);
+              } catch (err) {
+                              return res.status(500).json({ error: err.message });
+              }
+});
+
 // GET /extrato
 app.get('/extrato', async (req, res) => {
             try {
