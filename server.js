@@ -317,6 +317,41 @@ app.post('/transferencia/pay', async (req, res) => {
             }
 });
 
+// POST /pix/pay - used by Supabase edge function inter-api (action "pix-pay")
+// Expects: { chave | chavePix, tipoChave | tipoConta, valor (centavos) | valorReais, descricao?, nomeDestinatario? }
+app.post('/pix/pay', async (req, res) => {
+            console.log('[pix/pay] received body:', JSON.stringify(req.body));
+            try {
+                        const body = req.body || {};
+                        const chave = body.chave || body.chavePix;
+                        const valorReais = body.valorReais;
+                        const valor = body.valor;
+                        const descricao = body.descricao || 'Pagamento PIX';
+                        const valorNum = parseFloat(valorReais) || parseFloat(((valor || 0) / 100).toFixed(2)) || 0;
+                        if (!chave) return res.status(400).json({ error: 'chave pix e obrigatoria' });
+                        if (!valorNum) return res.status(400).json({ error: 'valor e obrigatorio' });
+                        console.log('[pix/pay] getting token...');
+                        const token = await getToken('pagamento-pix.write');
+                        console.log('[pix/pay] token ok, calling Inter API (via Pix - chave)...');
+                        const pixBody = {
+                                    valor: parseFloat(valorNum.toFixed(2)),
+                                    descricao,
+                                    destinatario: {
+                                                tipo: 'CHAVE',
+                                                chave: chave
+                                    }
+                        };
+                        const result = await interRequest('POST', '/banking/v2/pix', token, pixBody);
+                        console.log('[pix/pay] /banking/v2/pix status:', result.status, 'body:', result.body.substring(0, 300));
+                        let parsed;
+                        try { parsed = JSON.parse(result.body); } catch (e) { parsed = { raw: result.body }; }
+                        return res.status(result.status).json(parsed);
+            } catch (err) {
+                        console.error('[pix/pay] error:', err.message);
+                        return res.status(500).json({ error: err.message });
+            }
+});
+
 // GET /extrato
 app.get('/extrato', async (req, res) => {
             try {
